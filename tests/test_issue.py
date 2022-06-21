@@ -3,6 +3,7 @@ from iminuit.util import IMinuitWarning
 import pickle
 import pytest
 import numpy as np
+from numpy.testing import assert_allclose
 
 
 def lsq(func):
@@ -156,3 +157,16 @@ def test_issue_694():
             break
     else:
         assert False
+
+
+def test_issue_756():
+    unc = pytest.importorskip("uncertainties")
+    unp = pytest.importorskip("uncertainties.unumpy")
+
+    start = np.zeros(3)
+    m = Minuit(fcn, start)
+    m.migrad()
+    cv = unc.correlated_values(m.values, m.covariance)
+    assert_allclose(unp.nominal_values(cv), (0.0, 0.0, 0.0))
+    assert_allclose(unp.std_devs(cv), (1, 1, 1))
+    assert_allclose(unp.correlation(cv), (1, 1, 1))
